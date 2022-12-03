@@ -5,7 +5,7 @@ const reminderController = require("../controller/reminder_controller");
 
 const { ensureAuthenticated } = require("../middleware/check_auth");
 
-//only if next is called, will u render dashboard
+//only if ensureAuthenticated returns true, will u render reminders
 router.get("/reminders", ensureAuthenticated, (req, res) => {
   res.render("reminder/index", { reminders: req.user.reminders });
 });
@@ -57,6 +57,12 @@ router.post("/reminder/update/:id", ensureAuthenticated, (req, res) => {
   searchResult.title = req.body.title;
   searchResult.description = req.body.description;
   searchResult.completed = req.body.completed;
+  if (searchResult.completed === "true") {
+    searchResult.completed = true;
+  } else {
+    searchResult.completed = false;
+  }
+
   for (let i in req.user.reminders) {
     if (req.user.reminders[i].id == reminderId) {
       req.user.reminders[i] = searchResult;
@@ -67,7 +73,17 @@ router.post("/reminder/update/:id", ensureAuthenticated, (req, res) => {
 
 // Implement this yourself
 router.post("/reminder/delete/:id", ensureAuthenticated, (req, res) => {
-  reminderController.delete;
+  let reminderId = req.params.id;
+  let searchResult = req.user.reminders.find(function (reminder) {
+    return reminder.id == reminderId;
+  });
+  req.user.reminders.pop(searchResult);
+  res.redirect("/reminders");
+});
+
+router.get("/logout", ensureAuthenticated, (req, res) => {
+  req.logout();
+  res.redirect("/");
 });
 
 module.exports = router;
